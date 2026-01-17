@@ -1,0 +1,17 @@
+{
+    "name": "input-mapping",
+    "version": "1.0.0",
+    "description": "Controller Visualization and Input Mapping Tool",
+    "main": "index.html",
+    "scripts": {
+        "start": "serve .",
+        "deploy": "vercel --prod"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "serve": "^14.2.4",
+        "vercel": "^39.2.2"
+    }
+}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InputMapper - Professional Controller Mapping Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+<body class="dark-theme">
+    <header>
+        <nav class="floating-menu">
+            <button class="menu-btn active" data-type="xbox">Xbox</button>
+            <button class="menu-btn" data-type="switch">Switch</button>
+            <button class="menu-btn" data-type="playstation">PlayStation</button>
+            <button class="menu-btn" data-type="keyboard">Keyboard / Mouse</button>
+        </nav>
+
+        <div class="header-right">
+            <div class="color-picker-wrapper">
+                <input type="color" id="controllerColor" value="#192752" title="Controller Color">
+                <div class="color-circle" id="colorIndicator"></div>
+            </div>
+        </div>
+    </header>
+
+    <main id="app">
+        <div class="toolbar">
+            <div class="title-group">
+                <input type="text" id="mappingTitle" placeholder="Untitled Mapping" aria-label="Mapping Title">
+            </div>
+            <div class="action-buttons">
+                <button id="importBtn" class="btn-secondary">
+                    <span class="material-symbols-rounded">file_upload</span> Import
+                </button>
+                <div class="export-dropdown">
+                    <button id="exportMenuBtn" class="btn-primary">
+                        Export <span class="material-symbols-rounded">expand_more</span>
+                    </button>
+                    <div class="dropdown-content">
+                        <button id="exportJson">JSON (.json)</button>
+                        <button id="exportSvg">Vector (.svg)</button>
+                        <button id="exportPng">Image (.png)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workspace" id="workspace">
+            <div class="controller-container" id="controllerContainer">
+                <div id="controllerSvgWrapper"></div>
+                <svg id="linesContainer"></svg>
+            </div>
+            <div id="labelsLayer"></div>
+        </div>
+
+        <div class="side-panel">
+            <div class="side-panel-content">
+                <h3>Add Mappings</h3>
+                <div class="key-selector" id="keySelector">
+                    <!-- Keys will be injected here based on controller type -->
+                </div>
+
+                <div class="line-settings">
+                    <h3>Line Settings</h3>
+                    <div class="setting-item">
+                        <label>Style</label>
+                        <select id="lineStyle">
+                            <option value="solid">Solid</option>
+                            <option value="dashed" selected>Dashed</option>
+                            <option value="dotted">Dotted</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Width</label>
+                        <input type="range" id="lineWidth" min="1" max="10" value="2">
+                    </div>
+                    <div class="setting-item">
+                        <label>Color</label>
+                        <input type="color" id="lineColor" value="#ffffff">
+                    </div>
+                    <div class="setting-item">
+                        <label>Type</label>
+                        <select id="lineType">
+                            <option value="straight">Straight</option>
+                            <option value="curved">Curved</option>
+                            <option value="angle">Angle</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Endpoints</label>
+                        <select id="lineEnd">
+                            <option value="none">None</option>
+                            <option value="arrow">Arrow</option>
+                            <option value="ball">Ball</option>
+                            <option value="square">Square</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
