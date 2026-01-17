@@ -39,6 +39,8 @@ class InputMapper {
         this.keySelector = document.getElementById('keySelector');
         this.mappingTitle = document.getElementById('mappingTitle');
         this.menuBtns = document.querySelectorAll('.menu-btn');
+        this.exportDropdown = document.querySelector('.export-dropdown');
+        this.exportMenuBtn = document.getElementById('exportMenuBtn');
     }
 
     attachListeners() {
@@ -62,18 +64,62 @@ class InputMapper {
         window.addEventListener('mouseup', () => this.onMouseUp());
 
         // Export Actions
+        this.exportMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.exportDropdown.classList.toggle('open');
+        });
+
+        window.addEventListener('click', () => {
+            this.exportDropdown.classList.remove('open');
+        });
+
         document.getElementById('exportJson').addEventListener('click', () => this.exportJson());
         document.getElementById('exportSvg').addEventListener('click', () => this.exportSvg());
         document.getElementById('exportPng').addEventListener('click', () => this.exportPng());
         document.getElementById('importBtn').addEventListener('click', () => this.triggerImport());
 
         // Line Settings Listeners
-        const settings = ['lineStyle', 'lineWidth', 'lineColor', 'lineType', 'lineEnd'];
-        settings.forEach(id => {
-            document.getElementById(id).addEventListener('input', (e) => {
-                const key = id.replace('line', '').toLowerCase();
-                this.lineConfig[key] = e.target.value;
-                this.updateLines();
+        document.getElementById('lineWidth').addEventListener('input', (e) => {
+            this.lineConfig.width = e.target.value;
+            this.updateLines();
+        });
+
+        document.getElementById('lineColor').addEventListener('input', (e) => {
+            this.lineConfig.color = e.target.value;
+            this.updateLines();
+            this.setupMarkers(); // Re-setup markers to pick up new color
+        });
+
+        // Custom Select Dropdowns
+        document.querySelectorAll('.custom-select').forEach(container => {
+            const trigger = container.querySelector('.select-trigger');
+            const items = container.querySelectorAll('.dropdown-item');
+            const settingId = container.dataset.id.replace('line', '').toLowerCase();
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close other dropdowns first
+                document.querySelectorAll('.dropdown-container').forEach(c => {
+                    if (c !== container) c.classList.remove('open');
+                });
+                container.classList.toggle('open');
+            });
+
+            items.forEach(item => {
+                item.addEventListener('click', () => {
+                    const value = item.dataset.value;
+                    const label = item.textContent;
+
+                    // Update UI
+                    container.querySelector('.selected-value').textContent = label;
+                    items.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+
+                    // Update Logic
+                    this.lineConfig[settingId] = value;
+                    this.updateLines();
+                    container.classList.remove('open');
+                });
             });
         });
     }
@@ -160,13 +206,30 @@ class InputMapper {
     addLabelFromSelector(e, key, type) {
         e.preventDefault();
         const rect = this.workspace.getBoundingClientRect();
+
+        // Calculate safe initial position
+        let initialX = e.clientX - rect.left - 50;
+        let initialY = e.clientY - rect.top - 20;
+
+        // Clamp to avoid menu overlap
+        // Toolbar (Top): ~100px
+        // Side Panel (Right): ~350px
+        // Header (Bottom): ~100px
+        const marginX = 40;
+        const sidePanelLimit = rect.width - 360;
+        const topLimit = 100;
+        const bottomLimit = rect.height - 120;
+
+        initialX = Math.max(marginX, Math.min(sidePanelLimit, initialX));
+        initialY = Math.max(topLimit, Math.min(bottomLimit, initialY));
+
         const label = this.createLabel({
             id: Date.now(),
             key: key,
             type: type,
             text: '',
-            x: e.clientX - rect.left - 50,
-            y: e.clientY - rect.top - 20,
+            x: initialX,
+            y: initialY,
             targetX: 0.5, // normalized 0-1
             targetY: 0.5
         });

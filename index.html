@@ -5,7 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InputMapper - Professional Controller Mapping Tool</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/img/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon/favicon-16x16.png">
+    <link rel="shortcut icon" href="assets/img/favicon/favicon.ico">
+    <link rel="manifest" href="assets/img/favicon/site.webmanifest">
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/components.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -41,14 +48,14 @@
                 <button id="importBtn" class="btn-secondary">
                     <span class="material-symbols-rounded">file_upload</span> Import
                 </button>
-                <div class="export-dropdown">
+                <div class="export-dropdown dropdown-container">
                     <button id="exportMenuBtn" class="btn-primary">
                         Export <span class="material-symbols-rounded">expand_more</span>
                     </button>
-                    <div class="dropdown-content">
-                        <button id="exportJson">JSON (.json)</button>
-                        <button id="exportSvg">Vector (.svg)</button>
-                        <button id="exportPng">Image (.png)</button>
+                    <div class="dropdown-menu">
+                        <button id="exportJson" class="dropdown-item">JSON (.json)</button>
+                        <button id="exportSvg" class="dropdown-item">Vector (.svg)</button>
+                        <button id="exportPng" class="dropdown-item">Image (.png)</button>
                     </div>
                 </div>
             </div>
@@ -57,9 +64,23 @@
         <div class="workspace" id="workspace">
             <div class="controller-container" id="controllerContainer">
                 <div id="controllerSvgWrapper"></div>
-                <svg id="linesContainer"></svg>
             </div>
+            <svg id="linesContainer"></svg>
             <div id="labelsLayer"></div>
+        </div>
+
+        <div class="zoom-controls-floating">
+            <button id="zoomIn" class="btn-icon" title="Zoom In">
+                <span class="material-symbols-rounded">add</span>
+            </button>
+            <span id="zoomLevel" class="zoom-level">100%</span>
+            <button id="zoomOut" class="btn-icon" title="Zoom Out">
+                <span class="material-symbols-rounded">remove</span>
+            </button>
+            <div class="zoom-divider"></div>
+            <button id="zoomReset" class="btn-icon" title="Reset Zoom">
+                <span class="material-symbols-rounded">restart_alt</span>
+            </button>
         </div>
 
         <div class="side-panel">
@@ -73,43 +94,61 @@
                     <h3>Line Settings</h3>
                     <div class="setting-item">
                         <label>Style</label>
-                        <select id="lineStyle">
-                            <option value="solid">Solid</option>
-                            <option value="dashed" selected>Dashed</option>
-                            <option value="dotted">Dotted</option>
-                        </select>
+                        <div class="dropdown-container custom-select" id="lineStyleContainer" data-id="lineStyle">
+                            <button class="select-trigger">
+                                <span class="selected-value">Dashed</span>
+                                <span class="material-symbols-rounded">expand_more</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" data-value="solid">Solid</button>
+                                <button class="dropdown-item active" data-value="dashed">Dashed</button>
+                                <button class="dropdown-item" data-value="dotted">Dotted</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="setting-item">
-                        <label>Width</label>
+                        <label>Width <span id="lineWidthValue" class="value-badge">2px</span></label>
                         <input type="range" id="lineWidth" min="1" max="10" value="2">
                     </div>
                     <div class="setting-item">
                         <label>Color</label>
-                        <input type="color" id="lineColor" value="#ffffff">
+                        <input type="color" id="lineColor" value="#cebbbb">
                     </div>
                     <div class="setting-item">
                         <label>Type</label>
-                        <select id="lineType">
-                            <option value="straight">Straight</option>
-                            <option value="curved">Curved</option>
-                            <option value="angle">Angle</option>
-                        </select>
+                        <div class="dropdown-container custom-select" id="lineTypeContainer" data-id="lineType">
+                            <button class="select-trigger">
+                                <span class="selected-value">Straight</span>
+                                <span class="material-symbols-rounded">expand_more</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item active" data-value="straight">Straight</button>
+                                <button class="dropdown-item" data-value="curved">Curved</button>
+                                <button class="dropdown-item" data-value="angle">Angle</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="setting-item">
                         <label>Endpoints</label>
-                        <select id="lineEnd">
-                            <option value="none">None</option>
-                            <option value="arrow">Arrow</option>
-                            <option value="ball">Ball</option>
-                            <option value="square">Square</option>
-                        </select>
+                        <div class="dropdown-container custom-select" id="lineEndContainer" data-id="lineEnd">
+                            <button class="select-trigger">
+                                <span class="selected-value">Ball</span>
+                                <span class="material-symbols-rounded">expand_more</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" data-value="none">None</button>
+                                <button class="dropdown-item" data-value="arrow">Arrow</button>
+                                <button class="dropdown-item active" data-value="ball">Ball</button>
+                                <button class="dropdown-item" data-value="square">Square</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <script src="app.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
 </body>
 
 </html>
