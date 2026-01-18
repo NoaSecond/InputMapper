@@ -28,7 +28,8 @@
             <button class="menu-btn active" data-type="xbox">Xbox</button>
             <button class="menu-btn" data-type="switch">Switch</button>
             <button class="menu-btn" data-type="playstation">PlayStation</button>
-            <button class="menu-btn" data-type="keyboard">Keyboard / Mouse</button>
+            <button class="menu-btn" data-type="keyboard">Keyboard</button>
+            <button class="menu-btn" data-type="mouse">Mouse</button>
         </nav>
 
         <div class="header-right">
@@ -62,11 +63,13 @@
         </div>
 
         <div class="workspace" id="workspace">
-            <div class="controller-container" id="controllerContainer">
-                <div id="controllerSvgWrapper"></div>
+            <div id="zoomStage" class="zoom-stage">
+                <div class="controller-container" id="controllerContainer">
+                    <div id="controllerSvgWrapper"></div>
+                </div>
+                <svg id="linesContainer"></svg>
+                <div id="labelsLayer"></div>
             </div>
-            <svg id="linesContainer"></svg>
-            <div id="labelsLayer"></div>
         </div>
 
         <div class="zoom-controls-floating">

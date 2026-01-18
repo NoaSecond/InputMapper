@@ -2,6 +2,7 @@ import { UIController } from './modules/UIController.js';
 import { Renderer } from './modules/Renderer.js';
 import { Storage } from './modules/Storage.js';
 import { Utils } from './modules/Utils.js';
+import { DEFAULT_POSITIONS } from './modules/Config.js';
 
 export class InputMapper {
     constructor() {
@@ -21,7 +22,16 @@ export class InputMapper {
             end: 'ball'
         };
 
+        this.coordPreview = this.createCoordPreview();
         this.init();
+    }
+
+    createCoordPreview() {
+        const div = document.createElement('div');
+        div.className = 'coord-preview';
+        div.style.display = 'none';
+        document.body.appendChild(div);
+        return div;
     }
 
     async init() {
@@ -88,9 +98,14 @@ export class InputMapper {
             return [...common, 'aButton', 'bButton', 'xButton', 'yButton', 'leftStickClick', 'rightStickClick'];
         } else if (type === 'playstation') {
             return [...common, 'crossButton', 'circleButton', 'squareButton', 'triangleButton', 'l3Button', 'r3Button'];
-        } else { // switch
+        } else if (type === 'switch') {
             return [...common, 'aButton', 'bButton', 'xButton', 'yButton', 'leftStickClick', 'rightStickClick'];
+        } else if (type === 'keyboard') {
+            return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Space', 'Tab', 'Caps', 'Esc', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+        } else if (type === 'mouse') {
+            return ['LeftClick', 'MiddleClick', 'RightClick', 'ScrollUp', 'ScrollDown'];
         }
+        return [];
     }
 
     addLabelFromSelector(e, key, type) {
@@ -108,6 +123,9 @@ export class InputMapper {
         initialX = Math.max(marginX, Math.min(sidePanelLimit, initialX));
         initialY = Math.max(topLimit, Math.min(bottomLimit, initialY));
 
+        // Get default position if available
+        const defaultPos = (DEFAULT_POSITIONS[type] && DEFAULT_POSITIONS[type][key]) || { targetX: 0.5, targetY: 0.5 };
+
         const label = this.createLabel({
             id: Date.now(),
             key: key,
@@ -115,8 +133,8 @@ export class InputMapper {
             text: '',
             x: initialX,
             y: initialY,
-            targetX: 0.5,
-            targetY: 0.5
+            targetX: defaultPos.targetX,
+            targetY: defaultPos.targetY
         });
 
         this.labels.push(label);
@@ -234,6 +252,11 @@ export class InputMapper {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
+        // Show coordinate preview further from cursor to avoid overlap
+        this.coordPreview.style.display = 'block';
+        this.coordPreview.style.left = `${e.clientX + 25}px`;
+        this.coordPreview.style.top = `${e.clientY + 25}px`;
+
         if (this.draggedItem.type === 'label') {
             const label = this.labels.find(l => l.id == this.draggedItem.id);
             if (label) {
@@ -242,6 +265,8 @@ export class InputMapper {
                 label.element.style.left = `${label.x}px`;
                 label.element.style.top = `${label.y}px`;
                 this.updateDotPosition(label.dotElement, label);
+
+                this.coordPreview.textContent = `X: ${Math.round(label.x)} Y: ${Math.round(label.y)}`;
             }
         } else if (this.draggedItem.type === 'dot') {
             const label = this.labels.find(l => l.id == this.draggedItem.id);
@@ -275,6 +300,8 @@ export class InputMapper {
                 label.targetY = Math.max(0, Math.min(1, normY));
 
                 this.updateDotPosition(label.dotElement, label);
+
+                this.coordPreview.textContent = `X: ${Math.round(label.targetX * 100)}% Y: ${Math.round(label.targetY * 100)}%`;
             }
         }
         this.updateLines();
@@ -283,6 +310,9 @@ export class InputMapper {
     onMouseUp() {
         this.isDragging = false;
         this.draggedItem = null;
+        if (this.coordPreview) {
+            this.coordPreview.style.display = 'none';
+        }
     }
 
     updateLines() {
@@ -291,17 +321,23 @@ export class InputMapper {
 
     setZoom(scale) {
         this.zoom = Math.max(0.2, Math.min(3, scale));
-        const container = document.getElementById('controllerContainer');
-        const labelsLayer = document.getElementById('labelsLayer');
-        const linesContainer = document.getElementById('linesContainer');
+        const zoomStage = document.getElementById('zoomStage');
 
-        container.style.transform = `scale(${this.zoom})`;
-        labelsLayer.style.transform = `scale(${this.zoom})`;
-        linesContainer.style.transform = `scale(${this.zoom})`;
+        if (zoomStage) {
+            zoomStage.style.transform = `scale(${this.zoom})`;
+        }
 
-        // After zoom, labels and dots might need alignment check
-        // but since they are in a layer that scales, we just need to update lines
-        this.updateLines();
+        // Update lines during transition (approx 300ms)
+        const startTime = performance.now();
+        const duration = 350; // Slightly longer than CSS transition
+
+        const animate = (time) => {
+            this.updateLines();
+            if (time - startTime < duration) {
+                requestAnimationFrame(animate);
+            }
+        };
+        requestAnimationFrame(animate);
 
         if (this.zoomLevelDisplay) {
             this.zoomLevelDisplay.textContent = `${Math.round(this.zoom * 100)}%`;

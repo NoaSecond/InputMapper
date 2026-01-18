@@ -1,21 +1,26 @@
 export class Renderer {
     static updateLines(app) {
         app.linesContainer.innerHTML = '';
-        const workspaceRect = app.workspace.getBoundingClientRect();
+        const zoomStage = document.getElementById('zoomStage');
+        if (!zoomStage) return;
+
+        const stageRect = zoomStage.getBoundingClientRect();
+        const zoom = app.zoom;
 
         this.setupMarkers(app);
 
         app.labels.forEach(label => {
             const labelRect = label.element.getBoundingClientRect();
             const svg = app.svgWrapper.querySelector('svg');
+            if (!svg) return;
             const svgRect = svg.getBoundingClientRect();
 
-            const startX = labelRect.left - workspaceRect.left + labelRect.width / 2;
-            const startY = labelRect.top - workspaceRect.top + labelRect.height / 2;
+            // Calculate positions relative to stage, adjusting for visual scale
+            const startX = (labelRect.left - stageRect.left) / zoom + (labelRect.width / zoom) / 2;
+            const startY = (labelRect.top - stageRect.top) / zoom + (labelRect.height / zoom) / 2;
 
-            // Calculate end point from normalized target on SVG
-            const endX = (svgRect.left - workspaceRect.left) + (svgRect.width * label.targetX);
-            const endY = (svgRect.top - workspaceRect.top) + (svgRect.height * label.targetY);
+            const endX = (svgRect.left - stageRect.left) / zoom + (svgRect.width / zoom * label.targetX);
+            const endY = (svgRect.top - stageRect.top) / zoom + (svgRect.height / zoom * label.targetY);
 
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 

@@ -395,3 +395,20 @@
     border: none;
     border-radius: 50%;
 }
+
+/* Coordinate Preview */
+.coord-preview {
+    position: fixed;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(8px);
+    color: var(--accent-color);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 1000;
+    border: 1px solid var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    font-family: 'JetBrains Mono', monospace;
+}
