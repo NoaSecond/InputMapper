@@ -350,7 +350,7 @@ export class InputMapper {
 
     exportJson() { Storage.exportJson(this); }
     exportSvg() { Storage.exportSvg(this); }
-    exportPng() { alert("PNG Export: In a real app we would draw the workspace to a canvas. For this MVP, please use SVG export."); }
+    exportPng() { Storage.exportPng(this); }
     triggerImport() { Storage.triggerImport(this); }
 
     async importMapping(data) {

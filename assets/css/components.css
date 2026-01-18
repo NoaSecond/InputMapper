@@ -240,6 +240,7 @@
     height: 24px;
     flex-shrink: 0;
     pointer-events: none;
+    object-fit: contain;
 }
 
 .mapping-label input {
@@ -278,6 +279,31 @@
     cursor: crosshair;
     z-index: 20;
     box-shadow: 0 0 10px var(--accent-glow);
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+}
+
+/* Larger hit area to reveal the dot when hovering near the endpoint (Radius: 30px) */
+.target-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60px;
+    height: 60px;
+    transform: translate(-50%, -50%);
+    background: transparent;
+}
+
+.mapping-label:hover+.target-dot,
+.target-dot:hover {
+    opacity: 1;
+}
+
+.target-dot:hover {
+    transform: translate(-50%, -50%) scale(1.4);
+    box-shadow: 0 0 15px var(--accent-color);
 }
 
 /* Line Settings */
@@ -411,4 +437,22 @@
     border: 1px solid var(--accent-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     font-family: 'JetBrains Mono', monospace;
+}
+
+/* Export Overrides */
+.export-mode .target-dot,
+.export-mode .coord-preview {
+    display: none !important;
+}
+
+.export-mode .mapping-label {
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.export-mode .mapping-label input {
+    /* Ensure text is visible and aligned in export */
+    line-height: 1;
+    padding: 0;
+    margin: 0;
 }
