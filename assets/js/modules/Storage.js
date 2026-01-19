@@ -14,7 +14,6 @@ export class Storage {
                 targetY: l.targetY
             }))
         };
-
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -24,6 +23,7 @@ export class Storage {
     }
 
     static async generateFullSvg(app, includeBackground = true) {
+
         const workspace = document.getElementById('workspace');
         const svgWrapper = document.getElementById('controllerSvgWrapper');
         const zoomStage = document.getElementById('zoomStage');
@@ -31,149 +31,184 @@ export class Storage {
         const originalZoom = app.zoom;
         const originalTransition = zoomStage.style.transition;
 
-        // Force zoom 1 and disable transition for export calculations
         zoomStage.style.transition = 'none';
         app.setZoom(1);
 
-        // Wait a frame for layout to settle
+        await new Promise(r => setTimeout(r, 200));
         await new Promise(r => requestAnimationFrame(r));
 
         const workspaceRect = workspace.getBoundingClientRect();
         const controllerSvg = svgWrapper.querySelector('svg');
         const controllerRect = controllerSvg.getBoundingClientRect();
 
-        // Create main SVG with all namespaces
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', workspaceRect.width);
-        svg.setAttribute('height', workspaceRect.height);
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('width', workspaceRect.width.toString());
+        svg.setAttribute('height', workspaceRect.height.toString());
         svg.setAttribute('viewBox', `0 0 ${workspaceRect.width} ${workspaceRect.height}`);
-        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('xmlns', NS);
         svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 
+        // 0. Background Rect (more compatible than CSS style)
         if (includeBackground) {
-            svg.style.backgroundColor = app.backgroundColor;
+            const bg = document.createElementNS(NS, 'rect');
+            bg.setAttribute('width', '100%');
+            bg.setAttribute('height', '100%');
+            bg.setAttribute('fill', app.backgroundColor || '#0f172a');
+            svg.appendChild(bg);
         }
 
-        // 1. Defs consolidation
-        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        // 1. Defs
+        const defs = document.createElementNS(NS, 'defs');
         svg.appendChild(defs);
 
-        // Add markers
-        const color = app.lineConfig ? app.lineConfig.color : '#3b82f6';
-        defs.innerHTML = `
-            <marker id="marker-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="${color}" />
-            </marker>
-            <marker id="marker-ball" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <circle cx="5" cy="5" r="5" fill="${color}" />
-            </marker>
-            <marker id="marker-square" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <rect x="0" y="0" width="10" height="10" fill="${color}" />
-            </marker>
-        `;
+        const mColor = (app.lineConfig && app.lineConfig.color) || '#cebbbb';
 
-        // Include defs from controller SVG (important for clip-paths, gradients, etc)
+        // v3.0: Removed SVG <marker> defs. 
+        // We now bake markers as direct geometry in the main group for absolute compatibility.
+
+        // Include controller defs
         const controllerDefs = controllerSvg.querySelector('defs');
         if (controllerDefs) {
             Array.from(controllerDefs.childNodes).forEach(node => {
-                defs.appendChild(node.cloneNode(true));
+                if (node.nodeType === 1) defs.appendChild(node.cloneNode(true));
             });
         }
 
-        // 2. Controller Rendering
-        const controllerClone = controllerSvg.cloneNode(true);
-        const gController = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        // 2. Controller
+        const gController = document.createElementNS(NS, 'g');
         const cx = controllerRect.left - workspaceRect.left;
         const cy = controllerRect.top - workspaceRect.top;
         gController.setAttribute('transform', `translate(${cx}, ${cy})`);
-
-        // Flatten controller content into group (skipping its original defs as we merged them)
-        Array.from(controllerClone.childNodes).forEach(node => {
-            if (node.nodeName !== 'defs') {
-                gController.appendChild(node.cloneNode(true));
-            }
+        Array.from(controllerSvg.childNodes).forEach(node => {
+            if (node.nodeName.toLowerCase() !== 'defs') gController.appendChild(node.cloneNode(true));
         });
         svg.appendChild(gController);
 
-        // 3. Lines Rendering
-        const gLines = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        // 3. Lines
+        const gLines = document.createElementNS(NS, 'g');
+        const gMarkers = document.createElementNS(NS, 'g'); // New group for baked markers
+        const strokeColor = (app.lineConfig && app.lineConfig.color) || '#cebbbb';
+        const strokeWidth = (app.lineConfig && app.lineConfig.width) || 2;
+
         Array.from(app.linesContainer.childNodes).forEach(node => {
-            if (node.nodeName === 'path') {
-                const pathClone = node.cloneNode(true);
-                // Fix: Ensure marker-end uses a local reference (some browsers add the full URL)
-                const markerEnd = pathClone.getAttribute('marker-end');
-                if (markerEnd && markerEnd.includes('#')) {
-                    const markerId = markerEnd.split('#').pop().replace(/["')]/g, '');
-                    pathClone.setAttribute('marker-end', `url(#${markerId})`);
-                }
+            if (node.nodeName.toLowerCase() === 'path') {
+                // 1. Clone the line
+                const pathClone = document.createElementNS(NS, 'path');
+                pathClone.setAttribute('d', node.getAttribute('d'));
+                pathClone.setAttribute('fill', 'none');
+                pathClone.setAttribute('stroke', strokeColor);
+                pathClone.setAttribute('stroke-width', strokeWidth.toString());
+                pathClone.setAttribute('stroke-linecap', 'round');
+
+                const dash = node.getAttribute('stroke-dasharray');
+                if (dash) pathClone.setAttribute('stroke-dasharray', dash);
+
                 gLines.appendChild(pathClone);
+
+                // 2. Bake the marker (if any)
+                if (app.lineConfig && app.lineConfig.end && app.lineConfig.end !== 'none') {
+                    try {
+                        const len = node.getTotalLength();
+                        if (len > 0) {
+                            const p = node.getPointAtLength(len);
+                            const pPrev = node.getPointAtLength(Math.max(0, len - 2)); // Go back 2px to get tangent
+                            const angle = Math.atan2(p.y - pPrev.y, p.x - pPrev.x) * 180 / Math.PI;
+
+                            const markerGroup = document.createElementNS(NS, 'g');
+                            markerGroup.setAttribute('transform', `translate(${p.x}, ${p.y}) rotate(${angle})`);
+
+                            let shape;
+                            const size = Math.max(10, strokeWidth * 3); // Ensure minimum visible size
+
+                            if (app.lineConfig.end === 'ball') {
+                                shape = document.createElementNS(NS, 'circle');
+                                shape.setAttribute('r', (size / 2).toString());
+                                shape.setAttribute('fill', strokeColor);
+                            } else if (app.lineConfig.end === 'square') {
+                                shape = document.createElementNS(NS, 'rect');
+                                shape.setAttribute('x', (-size / 2).toString());
+                                shape.setAttribute('y', (-size / 2).toString());
+                                shape.setAttribute('width', size.toString());
+                                shape.setAttribute('height', size.toString());
+                                shape.setAttribute('fill', strokeColor);
+                            } else if (app.lineConfig.end === 'arrow') {
+                                shape = document.createElementNS(NS, 'path');
+                                // Arrow pointing along the line (which is angle 0 in the rotated group)
+                                // Tip at (0,0), wings back
+                                shape.setAttribute('d', `M 0 0 L ${-size} ${-size / 2} L ${-size} ${size / 2} Z`);
+                                shape.setAttribute('fill', strokeColor);
+                            }
+
+                            if (shape) {
+                                markerGroup.appendChild(shape);
+                                gMarkers.appendChild(markerGroup);
+                            }
+                        }
+                    } catch (err) {
+                        // Silent fail
+                    }
+                }
             }
         });
         svg.appendChild(gLines);
+        svg.appendChild(gMarkers); // Append markers after lines so they appear on top
 
-        // 4. Labels Rendering
+        // 4. Labels
+        const gLabels = document.createElementNS(NS, 'g');
         for (const l of app.labels) {
             const lRect = l.element.getBoundingClientRect();
             const lx = lRect.left - workspaceRect.left;
             const ly = lRect.top - workspaceRect.top;
 
-            const gLabel = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            const gLabel = document.createElementNS(NS, 'g');
             gLabel.setAttribute('transform', `translate(${lx}, ${ly})`);
 
-            // Background rect
-            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            rect.setAttribute('width', lRect.width);
-            rect.setAttribute('height', lRect.height);
-            rect.setAttribute('rx', 12);
+            const rect = document.createElementNS(NS, 'rect');
+            rect.setAttribute('width', lRect.width.toString());
+            rect.setAttribute('height', lRect.height.toString());
+            rect.setAttribute('rx', '12');
             rect.setAttribute('fill', '#1e293b');
             rect.setAttribute('stroke', 'rgba(255,255,255,0.2)');
             gLabel.appendChild(rect);
 
-            // Icon (Vector SVG embedding)
             const iconImg = l.element.querySelector('.key-icon');
             if (iconImg) {
                 const iconSvgContent = await this.getSvgContent(iconImg.src);
                 if (iconSvgContent) {
-                    // Use nested SVG for better scaling and automatic clipping
                     const nestedIconSvg = iconSvgContent.cloneNode(true);
                     const iconSize = 24;
                     const iconY = (lRect.height - iconSize) / 2;
-
-                    nestedIconSvg.setAttribute('x', 12);
-                    nestedIconSvg.setAttribute('y', iconY);
-                    nestedIconSvg.setAttribute('width', iconSize);
-                    nestedIconSvg.setAttribute('height', iconSize);
-
-                    // Remove fixed dimensions if they exist to let viewBox take over
-                    nestedIconSvg.removeAttribute('width');
-                    nestedIconSvg.removeAttribute('height');
-                    nestedIconSvg.setAttribute('width', iconSize);
-                    nestedIconSvg.setAttribute('height', iconSize);
-
+                    nestedIconSvg.setAttribute('x', "12");
+                    nestedIconSvg.setAttribute('y', iconY.toString());
+                    nestedIconSvg.setAttribute('width', iconSize.toString());
+                    nestedIconSvg.setAttribute('height', iconSize.toString());
+                    nestedIconSvg.removeAttribute('style');
+                    nestedIconSvg.removeAttribute('class');
                     gLabel.appendChild(nestedIconSvg);
                 }
             }
 
-            // Text
             const input = l.element.querySelector('input');
             if (input) {
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const text = document.createElementNS(NS, 'text');
                 text.textContent = input.value;
-                text.setAttribute('x', iconImg ? 44 : 16);
-                text.setAttribute('y', lRect.height / 2 + 5);
+                text.setAttribute('x', iconImg ? "44" : "16");
+                text.setAttribute('y', (lRect.height / 2 + 5).toString());
                 text.setAttribute('fill', 'white');
                 text.setAttribute('font-family', 'Inter, sans-serif');
                 text.setAttribute('font-size', '14px');
                 text.setAttribute('font-weight', '500');
+                text.setAttribute('dominant-baseline', 'middle');
                 gLabel.appendChild(text);
             }
-
-            svg.appendChild(gLabel);
+            gLabels.appendChild(gLabel);
         }
+        svg.appendChild(gLabels);
 
-        // Restore state
         app.setZoom(originalZoom);
         zoomStage.style.transition = originalTransition;
+
 
         return svg;
     }
@@ -184,48 +219,19 @@ export class Storage {
             const text = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, 'image/svg+xml');
-            return doc.querySelector('svg');
-        } catch (e) {
-            console.warn("Failed to fetch SVG content for embedding", e);
-            return null;
-        }
-    }
-
-
-    // Improved Base64 converter with Canvas fallback
-    static async imgToBase64(imgElementOrUrl) {
-        let url = typeof imgElementOrUrl === 'string' ? imgElementOrUrl : imgElementOrUrl.src;
-
-        // Strategy 1: Fetch (works for http/https)
-        try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-            });
-        } catch (e) {
-            // Strategy 2: Canvas draw (works for loaded local images where fetch fails)
-            if (typeof imgElementOrUrl !== 'string' && imgElementOrUrl.complete) {
-                try {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = imgElementOrUrl.naturalWidth || 24;
-                    canvas.height = imgElementOrUrl.naturalHeight || 24;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(imgElementOrUrl, 0, 0);
-                    return canvas.toDataURL('image/png');
-                } catch (err) {
-                    console.warn("Canvas conversion failed", err);
-                }
+            const svgEl = doc.querySelector('svg');
+            if (svgEl && !svgEl.getAttribute('xmlns')) {
+                svgEl.setAttribute('xmlns', "http://www.w3.org/2000/svg");
             }
-            return url; // Fallback to original URL
-        }
+            return svgEl;
+        } catch (e) { return null; }
     }
 
     static async exportSvg(app) {
         const svg = await this.generateFullSvg(app, false);
         const svgData = new XMLSerializer().serializeToString(svg);
+
+        // 1. Download SVG
         const blob = new Blob([svgData], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -235,28 +241,23 @@ export class Storage {
         URL.revokeObjectURL(url);
     }
 
+
+
     static async exportPng(app) {
         const svg = await this.generateFullSvg(app, false);
         const svgData = new XMLSerializer().serializeToString(svg);
-        const title = app.mappingTitle.value || 'mapping';
-
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
-
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
-
+        const url = URL.createObjectURL(new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' }));
         img.onload = () => {
             canvas.width = img.width * 2;
             canvas.height = img.height * 2;
             ctx.scale(2, 2);
             ctx.drawImage(img, 0, 0);
-
-            const pngUrl = canvas.toDataURL('image/png');
             const a = document.createElement('a');
-            a.href = pngUrl;
-            a.download = `${title}.png`;
+            a.href = canvas.toDataURL('image/png');
+            a.download = `${app.mappingTitle.value || 'Untitled Mapping'}.png`;
             a.click();
             URL.revokeObjectURL(url);
         };
@@ -272,12 +273,8 @@ export class Storage {
             const reader = new FileReader();
             reader.onload = (re) => {
                 try {
-                    const data = JSON.parse(re.target.result);
-                    app.importMapping(data);
-                } catch (err) {
-                    console.error("Import failed:", err);
-                    alert("Failed to parse the file.");
-                }
+                    app.importMapping(JSON.parse(re.target.result));
+                } catch (err) { alert("Failed to parse the file."); }
             };
             reader.readAsText(file);
         };
