@@ -26,11 +26,17 @@ export class Storage {
     static async generateFullSvg(app, includeBackground = true) {
         const workspace = document.getElementById('workspace');
         const svgWrapper = document.getElementById('controllerSvgWrapper');
+        const zoomStage = document.getElementById('zoomStage');
 
         const originalZoom = app.zoom;
-        // Force zoom 1 for export calculations
+        const originalTransition = zoomStage.style.transition;
+
+        // Force zoom 1 and disable transition for export calculations
+        zoomStage.style.transition = 'none';
         app.setZoom(1);
-        await new Promise(r => setTimeout(r, 100));
+
+        // Wait a frame for layout to settle
+        await new Promise(r => requestAnimationFrame(r));
 
         const workspaceRect = workspace.getBoundingClientRect();
         const controllerSvg = svgWrapper.querySelector('svg');
@@ -48,10 +54,11 @@ export class Storage {
             svg.style.backgroundColor = app.backgroundColor;
         }
 
-        // 1. Defs consolidation (Manually recreate markers to ensure they exist and have correct color)
+        // 1. Defs consolidation
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         svg.appendChild(defs);
 
+        // Add markers
         const color = app.lineConfig ? app.lineConfig.color : '#3b82f6';
         defs.innerHTML = `
             <marker id="marker-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
@@ -65,6 +72,14 @@ export class Storage {
             </marker>
         `;
 
+        // Include defs from controller SVG (important for clip-paths, gradients, etc)
+        const controllerDefs = controllerSvg.querySelector('defs');
+        if (controllerDefs) {
+            Array.from(controllerDefs.childNodes).forEach(node => {
+                defs.appendChild(node.cloneNode(true));
+            });
+        }
+
         // 2. Controller Rendering
         const controllerClone = controllerSvg.cloneNode(true);
         const gController = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -72,7 +87,7 @@ export class Storage {
         const cy = controllerRect.top - workspaceRect.top;
         gController.setAttribute('transform', `translate(${cx}, ${cy})`);
 
-        // Flatten controller content into group
+        // Flatten controller content into group (skipping its original defs as we merged them)
         Array.from(controllerClone.childNodes).forEach(node => {
             if (node.nodeName !== 'defs') {
                 gController.appendChild(node.cloneNode(true));
@@ -84,12 +99,19 @@ export class Storage {
         const gLines = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         Array.from(app.linesContainer.childNodes).forEach(node => {
             if (node.nodeName === 'path') {
-                gLines.appendChild(node.cloneNode(true));
+                const pathClone = node.cloneNode(true);
+                // Fix: Ensure marker-end uses a local reference (some browsers add the full URL)
+                const markerEnd = pathClone.getAttribute('marker-end');
+                if (markerEnd && markerEnd.includes('#')) {
+                    const markerId = markerEnd.split('#').pop().replace(/["')]/g, '');
+                    pathClone.setAttribute('marker-end', `url(#${markerId})`);
+                }
+                gLines.appendChild(pathClone);
             }
         });
         svg.appendChild(gLines);
 
-        // 4. Labels Rendering (Native SVG elements)
+        // 4. Labels Rendering
         for (const l of app.labels) {
             const lRect = l.element.getBoundingClientRect();
             const lx = lRect.left - workspaceRect.left;
@@ -107,21 +129,29 @@ export class Storage {
             rect.setAttribute('stroke', 'rgba(255,255,255,0.2)');
             gLabel.appendChild(rect);
 
-            // Icon (Image tag with embedded base64 data)
+            // Icon (Vector SVG embedding)
             const iconImg = l.element.querySelector('.key-icon');
             if (iconImg) {
-                const icon = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-                // Pass element to use canvas fallback
-                const base64Icon = await this.imgToBase64(iconImg);
+                const iconSvgContent = await this.getSvgContent(iconImg.src);
+                if (iconSvgContent) {
+                    // Use nested SVG for better scaling and automatic clipping
+                    const nestedIconSvg = iconSvgContent.cloneNode(true);
+                    const iconSize = 24;
+                    const iconY = (lRect.height - iconSize) / 2;
 
-                icon.setAttribute('href', base64Icon);
-                icon.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', base64Icon);
+                    nestedIconSvg.setAttribute('x', 12);
+                    nestedIconSvg.setAttribute('y', iconY);
+                    nestedIconSvg.setAttribute('width', iconSize);
+                    nestedIconSvg.setAttribute('height', iconSize);
 
-                icon.setAttribute('x', 12);
-                icon.setAttribute('y', (lRect.height - 24) / 2);
-                icon.setAttribute('width', 24);
-                icon.setAttribute('height', 24);
-                gLabel.appendChild(icon);
+                    // Remove fixed dimensions if they exist to let viewBox take over
+                    nestedIconSvg.removeAttribute('width');
+                    nestedIconSvg.removeAttribute('height');
+                    nestedIconSvg.setAttribute('width', iconSize);
+                    nestedIconSvg.setAttribute('height', iconSize);
+
+                    gLabel.appendChild(nestedIconSvg);
+                }
             }
 
             // Text
@@ -132,7 +162,7 @@ export class Storage {
                 text.setAttribute('x', iconImg ? 44 : 16);
                 text.setAttribute('y', lRect.height / 2 + 5);
                 text.setAttribute('fill', 'white');
-                text.setAttribute('font-family', 'sans-serif');
+                text.setAttribute('font-family', 'Inter, sans-serif');
                 text.setAttribute('font-size', '14px');
                 text.setAttribute('font-weight', '500');
                 gLabel.appendChild(text);
@@ -141,9 +171,26 @@ export class Storage {
             svg.appendChild(gLabel);
         }
 
+        // Restore state
         app.setZoom(originalZoom);
+        zoomStage.style.transition = originalTransition;
+
         return svg;
     }
+
+    static async getSvgContent(url) {
+        try {
+            const response = await fetch(url);
+            const text = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'image/svg+xml');
+            return doc.querySelector('svg');
+        } catch (e) {
+            console.warn("Failed to fetch SVG content for embedding", e);
+            return null;
+        }
+    }
+
 
     // Improved Base64 converter with Canvas fallback
     static async imgToBase64(imgElementOrUrl) {
