@@ -4,6 +4,8 @@ export class Storage {
             title: app.mappingTitle.value || 'Untitled',
             type: app.currentType,
             color: app.backgroundColor,
+            secondaryColor: app.secondaryColor,
+            accentColor: app.accentColor,
             labels: app.labels.map(l => ({
                 id: l.id,
                 key: l.key,
