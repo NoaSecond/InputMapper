@@ -38,6 +38,7 @@ export class Storage {
         await new Promise(r => requestAnimationFrame(r));
 
         const workspaceRect = workspace.getBoundingClientRect();
+        const stageRect = zoomStage.getBoundingClientRect();
         const controllerSvg = svgWrapper.querySelector('svg');
         const controllerRect = controllerSvg.getBoundingClientRect();
 
@@ -62,11 +63,6 @@ export class Storage {
         const defs = document.createElementNS(NS, 'defs');
         svg.appendChild(defs);
 
-        const mColor = (app.lineConfig && app.lineConfig.color) || '#cebbbb';
-
-        // v3.0: Removed SVG <marker> defs. 
-        // We now bake markers as direct geometry in the main group for absolute compatibility.
-
         // Include controller defs
         const controllerDefs = controllerSvg.querySelector('defs');
         if (controllerDefs) {
@@ -75,15 +71,38 @@ export class Storage {
             });
         }
 
+        // Main Content Group (Stage)
+        const dx = stageRect.left - workspaceRect.left;
+        const dy = stageRect.top - workspaceRect.top;
+        const mainGroup = document.createElementNS(NS, 'g');
+        mainGroup.setAttribute('transform', `translate(${dx}, ${dy})`);
+        svg.appendChild(mainGroup);
+
         // 2. Controller
         const gController = document.createElementNS(NS, 'g');
-        const cx = controllerRect.left - workspaceRect.left;
-        const cy = controllerRect.top - workspaceRect.top;
-        gController.setAttribute('transform', `translate(${cx}, ${cy})`);
+        const cx = controllerRect.left - stageRect.left;
+        const cy = controllerRect.top - stageRect.top;
+
+        // Calculate scale from viewBox
+        let scaleX = 1, scaleY = 1, vbX = 0, vbY = 0;
+        if (controllerSvg.viewBox && controllerSvg.viewBox.baseVal) {
+            const vb = controllerSvg.viewBox.baseVal;
+            vbX = vb.x;
+            vbY = vb.y;
+            if (vb.width > 0 && vb.height > 0) {
+                scaleX = controllerRect.width / vb.width;
+                scaleY = controllerRect.height / vb.height;
+            }
+        } else {
+            // Fallback if no viewBox (unlikely for SVG) or if using width/height attributes
+            // Ideally we assume viewBox exists as it's standard for this app's controllers
+        }
+
+        gController.setAttribute('transform', `translate(${cx}, ${cy}) scale(${scaleX}, ${scaleY}) translate(${-vbX}, ${-vbY})`);
         Array.from(controllerSvg.childNodes).forEach(node => {
             if (node.nodeName.toLowerCase() !== 'defs') gController.appendChild(node.cloneNode(true));
         });
-        svg.appendChild(gController);
+        mainGroup.appendChild(gController);
 
         // 3. Lines
         const gLines = document.createElementNS(NS, 'g');
@@ -151,15 +170,15 @@ export class Storage {
                 }
             }
         });
-        svg.appendChild(gLines);
-        svg.appendChild(gMarkers); // Append markers after lines so they appear on top
+        mainGroup.appendChild(gLines);
+        mainGroup.appendChild(gMarkers); // Append markers after lines
 
         // 4. Labels
         const gLabels = document.createElementNS(NS, 'g');
         for (const l of app.labels) {
             const lRect = l.element.getBoundingClientRect();
-            const lx = lRect.left - workspaceRect.left;
-            const ly = lRect.top - workspaceRect.top;
+            const lx = lRect.left - stageRect.left;
+            const ly = lRect.top - stageRect.top;
 
             const gLabel = document.createElementNS(NS, 'g');
             gLabel.setAttribute('transform', `translate(${lx}, ${ly})`);
@@ -189,22 +208,36 @@ export class Storage {
                 }
             }
 
-            const input = l.element.querySelector('input');
+            const input = l.element.querySelector('textarea, input');
             if (input) {
                 const text = document.createElementNS(NS, 'text');
-                text.textContent = input.value;
                 text.setAttribute('x', iconImg ? "44" : "16");
-                text.setAttribute('y', (lRect.height / 2 + 5).toString());
                 text.setAttribute('fill', 'white');
                 text.setAttribute('font-family', 'Inter, sans-serif');
                 text.setAttribute('font-size', '14px');
                 text.setAttribute('font-weight', '500');
-                text.setAttribute('dominant-baseline', 'middle');
+
+                const val = input.value || '';
+                const lines = val.split('\n');
+                const lineHeight = 18; // Approx 1.4 * 14px
+
+                // Vertical centering adjustment for multiline
+                const totalTextHeight = (lines.length - 1) * lineHeight;
+                const startY = (lRect.height / 2) - (totalTextHeight / 2) + 4; // +4 for visual baseline tweak
+
+                lines.forEach((line, index) => {
+                    const tspan = document.createElementNS(NS, 'tspan');
+                    tspan.textContent = line || ' ';
+                    tspan.setAttribute('x', iconImg ? "44" : "16");
+                    tspan.setAttribute('y', (startY + (index * lineHeight)).toString());
+                    text.appendChild(tspan);
+                });
+
                 gLabel.appendChild(text);
             }
             gLabels.appendChild(gLabel);
         }
-        svg.appendChild(gLabels);
+        mainGroup.appendChild(gLabels);
 
         app.setZoom(originalZoom);
         zoomStage.style.transition = originalTransition;

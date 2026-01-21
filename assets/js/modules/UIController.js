@@ -22,11 +22,43 @@ export class UIController {
 
     static attachListeners(app) {
         // Controller Type Switch
+        const switchModal = document.getElementById('switchModal');
+        const confirmBtn = document.getElementById('confirmSwitch');
+        const cancelBtn = document.getElementById('cancelSwitch');
+
         app.menuBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
+                const newType = btn.dataset.type;
+                if (newType === app.currentType) return;
+
+                if (app.labels.length > 0) {
+                    switchModal.classList.add('active');
+
+                    const userAction = await new Promise(resolve => {
+                        const onConfirm = () => {
+                            cleanup();
+                            resolve(true);
+                        };
+                        const onCancel = () => {
+                            cleanup();
+                            resolve(false);
+                        };
+                        const cleanup = () => {
+                            confirmBtn.removeEventListener('click', onConfirm);
+                            cancelBtn.removeEventListener('click', onCancel);
+                            switchModal.classList.remove('active');
+                        };
+                        confirmBtn.addEventListener('click', onConfirm);
+                        cancelBtn.addEventListener('click', onCancel);
+                    });
+
+                    if (!userAction) return;
+                    app.clearLabels();
+                }
+
                 app.menuBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                app.loadController(btn.dataset.type);
+                await app.loadController(newType);
             });
         });
 
