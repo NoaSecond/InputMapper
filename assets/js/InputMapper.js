@@ -152,11 +152,37 @@ export class InputMapper {
         img.src = `./assets/img/keys/${this.currentType}/${data.key}.svg`;
         img.className = 'key-icon';
 
-        const input = document.createElement('input');
-        input.type = 'text';
+        const input = document.createElement('textarea');
         input.value = data.text;
         input.placeholder = 'Action...';
-        input.addEventListener('input', (e) => data.text = e.target.value);
+        input.rows = 1;
+        input.addEventListener('input', (e) => {
+            data.text = e.target.value;
+            this.updateInputWidth(e.target);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' && e.shiftKey) || e.key === 'Escape') {
+                e.preventDefault();
+                input.blur();
+            }
+        });
+
+        const hint = document.createElement('div');
+        hint.className = 'input-hint';
+        hint.textContent = 'Shift+Enter to Done';
+
+        input.addEventListener('focus', () => {
+            hint.classList.add('visible');
+            div.classList.add('focused');
+        });
+
+        input.addEventListener('blur', () => {
+            hint.classList.remove('visible');
+            div.classList.remove('focused');
+        });
+
+        div.appendChild(hint);
 
         const del = document.createElement('span');
         del.className = 'delete-label material-symbols-rounded';
@@ -187,7 +213,49 @@ export class InputMapper {
         // Force a layout recalculation or use requestAnimationFrame to ensure rects are ready
         setTimeout(() => this.updateLines(), 0);
 
+        // Initial resize
+        this.updateInputWidth(input);
+
         return data;
+    }
+
+    updateInputWidth(input) {
+        const span = document.createElement('span');
+        span.style.font = window.getComputedStyle(input).font;
+        span.style.visibility = 'hidden';
+        span.style.position = 'absolute';
+        span.style.whiteSpace = 'pre';
+
+        const lines = (input.value || input.placeholder).split('\n');
+        let maxWidth = 0;
+
+        lines.forEach(line => {
+            // Replace spaces with non-breaking spaces for accurate measurement of trailing spaces if needed
+            span.textContent = line || ' ';
+            document.body.appendChild(span);
+            const w = span.getBoundingClientRect().width;
+            if (w > maxWidth) maxWidth = w;
+            document.body.removeChild(span);
+        });
+
+        // Add buffer and ensure min-width
+        input.style.width = `${Math.max(60, maxWidth + 10)}px`;
+
+        // Calculate height based on lines to avoid jumping
+        const roCount = lines.length;
+        input.style.height = `${roCount * 1.4}em`;
+
+        // Update lines during CSS transition
+        const startTime = performance.now();
+        const duration = 250; // Match text transition
+
+        const animate = (time) => {
+            this.updateLines();
+            if (time - startTime < duration) {
+                requestAnimationFrame(animate);
+            }
+        };
+        requestAnimationFrame(animate);
     }
 
     updateDotPosition(dot, data) {

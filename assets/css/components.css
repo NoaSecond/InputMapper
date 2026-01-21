@@ -220,6 +220,7 @@
     position: absolute;
     display: flex;
     align-items: center;
+    /* Keep centered or change to flex-start if preferred */
     gap: 8px;
     background: #1e293b;
     border: 1px solid var(--border-color);
@@ -229,6 +230,7 @@
     z-index: 10;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     user-select: none;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .mapping-label:hover {
@@ -243,14 +245,49 @@
     object-fit: contain;
 }
 
-.mapping-label input {
+.mapping-label input,
+.mapping-label textarea {
     background: transparent;
     border: none;
     color: white;
     font-family: inherit;
     font-size: 0.9rem;
     outline: none;
+    min-width: 60px;
     width: 100px;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    resize: none;
+    overflow: hidden;
+    line-height: 1.4;
+    padding: 0;
+    margin: 0;
+    white-space: pre;
+    word-wrap: normal;
+}
+
+.input-hint {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.input-hint.visible {
+    opacity: 1;
+}
+
+.mapping-label.focused {
+    z-index: 100 !important;
+    border-color: var(--accent-color);
 }
 
 .delete-label {
