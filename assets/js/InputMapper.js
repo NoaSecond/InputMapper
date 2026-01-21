@@ -219,6 +219,15 @@ export class InputMapper {
         return data;
     }
 
+    clearLabels() {
+        this.labels.forEach(l => {
+            l.element.remove();
+            l.dotElement.remove();
+        });
+        this.labels = [];
+        this.updateLines();
+    }
+
     updateInputWidth(input) {
         const span = document.createElement('span');
         span.style.font = window.getComputedStyle(input).font;
