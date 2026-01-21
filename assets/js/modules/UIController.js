@@ -11,6 +11,10 @@ export class UIController {
         app.workspace = document.getElementById('workspace');
         app.colorPicker = document.getElementById('controllerColor');
         app.colorIndicator = document.getElementById('colorIndicator');
+        app.secondaryColorPicker = document.getElementById('secondaryColor');
+        app.secondaryIndicator = document.getElementById('secondaryIndicator');
+        app.accentColorPicker = document.getElementById('accentColor');
+        app.accentIndicator = document.getElementById('accentIndicator');
         app.keySelector = document.getElementById('keySelector');
         app.mappingTitle = document.getElementById('mappingTitle');
         app.menuBtns = document.querySelectorAll('.menu-btn');
@@ -62,9 +66,19 @@ export class UIController {
             });
         });
 
-        // Color Picker
+        // Color Pickers
         app.colorPicker.addEventListener('input', (e) => {
             app.backgroundColor = e.target.value;
+            app.updateControllerColor();
+        });
+
+        app.secondaryColorPicker.addEventListener('input', (e) => {
+            app.secondaryColor = e.target.value;
+            app.updateControllerColor();
+        });
+
+        app.accentColorPicker.addEventListener('input', (e) => {
+            app.accentColor = e.target.value;
             app.updateControllerColor();
         });
 

@@ -152,6 +152,14 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
+.btn-icon span {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#zoomReset:hover span {
+    transform: rotate(-180deg);
+}
+
 .zoom-controls-floating {
     position: absolute;
     top: 100px;
@@ -663,7 +671,7 @@
     gap: 12px;
     background: rgba(22, 24, 30, 0.9);
     backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--border-color);
+    border: 1.5px solid #FFDD00;
     padding: 10px 18px;
     border-radius: 14px;
     color: white;
@@ -672,8 +680,23 @@
     font-weight: 600;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 200;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 221, 0, 0.2);
     font-family: 'Outfit', sans-serif;
+    animation: bmc-pulse 2s infinite;
+}
+
+@keyframes bmc-pulse {
+    0% {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 221, 0, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 10px rgba(255, 221, 0, 0);
+    }
+
+    100% {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 221, 0, 0);
+    }
 }
 
 .bmc-button-floating img {

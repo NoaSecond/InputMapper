@@ -4,15 +4,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InputMapper - Professional Controller Mapping Tool</title>
+
+    <!-- Primary Meta Tags -->
+    <title>InputMapper | Create Professional Controller Mappings</title>
+    <meta name="title" content="InputMapper | Create Professional Controller Mappings">
+    <meta name="description"
+        content="Free professional tool to create, visualize and export your controller mappings (Xbox, PlayStation, Switch, Keyboard/Mouse). Export to SVG, PNG or JSON.">
+    <meta name="keywords"
+        content="InputMapper, controller mapping, gamepad config, xbox, playstation, nintendo switch, gaming setup, tool, button mapping, export svg">
+    <meta name="author" content="Noa Second">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://inputmapper.vercel.app/">
+    <meta property="og:title" content="InputMapper | The Ultimate Controller Mapping Tool">
+    <meta property="og:description"
+        content="Create clean and professional mapping diagrams for your favorite games. Full support for Xbox, PS5, Switch and PC.">
+    <meta property="og:image" content="assets/img/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://inputmapper.vercel.app/">
+    <meta property="twitter:title" content="InputMapper | Mapping Tool">
+    <meta property="twitter:description"
+        content="Create and export your gamepad configurations in a few clicks. Free and professional.">
+    <meta property="twitter:image" content="assets/img/og-image.jpg">
+
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="assets/img/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon/favicon-16x16.png">
     <link rel="shortcut icon" href="assets/img/favicon/favicon.ico">
     <link rel="manifest" href="assets/img/favicon/site.webmanifest">
+
+    <!-- CSS -->
     <link rel="stylesheet" href="assets/css/base.css">
     <link rel="stylesheet" href="assets/css/layout.css">
     <link rel="stylesheet" href="assets/css/components.css">
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -24,18 +55,29 @@
 
 <body class="dark-theme">
     <header>
-        <nav class="floating-menu">
-            <button class="menu-btn active" data-type="xbox">Xbox</button>
-            <button class="menu-btn" data-type="switch">Switch</button>
-            <button class="menu-btn" data-type="playstation">PlayStation</button>
-            <button class="menu-btn" data-type="keyboard">Keyboard</button>
-            <button class="menu-btn" data-type="mouse">Mouse</button>
+        <nav class="floating-menu" aria-label="Controller Selection">
+            <button class="menu-btn active" data-type="xbox" aria-label="Configure Xbox Controller">Xbox</button>
+            <button class="menu-btn" data-type="switch" aria-label="Configure Switch Controller">Switch</button>
+            <button class="menu-btn" data-type="playstation"
+                aria-label="Configure PlayStation Controller">PlayStation</button>
+            <button class="menu-btn" data-type="keyboard" aria-label="Configure Keyboard">Keyboard</button>
+            <button class="menu-btn" data-type="mouse" aria-label="Configure Mouse">Mouse</button>
         </nav>
 
         <div class="header-right">
-            <div class="color-picker-wrapper">
-                <input type="color" id="controllerColor" value="#192752" title="Controller Color">
-                <div class="color-circle" id="colorIndicator"></div>
+            <div class="color-picker-system">
+                <div class="color-picker-group secondary" title="Secondary Color">
+                    <input type="color" id="secondaryColor" value="#606A6E" aria-label="Change secondary color">
+                    <div class="color-circle shadow" id="secondaryIndicator"></div>
+                </div>
+                <div class="color-picker-group accent" title="Accent Color">
+                    <input type="color" id="accentColor" value="#ffffff" aria-label="Change accent color">
+                    <div class="color-circle shadow" id="accentIndicator"></div>
+                </div>
+                <div class="color-picker-wrapper main" title="Main Color">
+                    <input type="color" id="controllerColor" value="#192752" aria-label="Change main controller color">
+                    <div class="color-circle" id="colorIndicator"></div>
+                </div>
             </div>
         </div>
     </header>
@@ -43,6 +85,7 @@
     <main id="app">
         <div class="toolbar">
             <div class="title-group">
+                <h1 class="app-title-h1">InputMapper /</h1>
                 <input type="text" id="mappingTitle" placeholder="Untitled Mapping" aria-label="Mapping Title">
             </div>
             <div class="action-buttons">
@@ -91,97 +134,100 @@
             <span>Support the project</span>
         </a>
 
-        <div class="side-panel">
+        <aside class="side-panel" aria-label="Mapping Settings">
             <div class="side-panel-content">
-                <h3>Add Mappings</h3>
+                <h2>Add Mappings</h2>
                 <div class="key-selector" id="keySelector">
                     <!-- Keys will be injected here based on controller type -->
                 </div>
 
                 <div class="line-settings">
-                    <h3>Line Settings</h3>
+                    <h2>Line Settings</h2>
                     <div class="setting-item">
-                        <label>Style</label>
+                        <label for="lineStyle">Style</label>
                         <div class="dropdown-container custom-select" id="lineStyleContainer" data-id="lineStyle">
-                            <button class="select-trigger">
+                            <button class="select-trigger" id="lineStyle" aria-haspopup="listbox">
                                 <span class="selected-value">Dashed</span>
                                 <span class="material-symbols-rounded">expand_more</span>
                             </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" data-value="solid">Solid</button>
-                                <button class="dropdown-item active" data-value="dashed">Dashed</button>
-                                <button class="dropdown-item" data-value="dotted">Dotted</button>
+                            <div class="dropdown-menu" role="listbox">
+                                <button class="dropdown-item" role="option" data-value="solid">Solid</button>
+                                <button class="dropdown-item active" role="option" data-value="dashed">Dashed</button>
+                                <button class="dropdown-item" role="option" data-value="dotted">Dotted</button>
                             </div>
                         </div>
                     </div>
                     <div class="setting-item">
-                        <label>Width <span id="lineWidthValue" class="value-badge">2px</span></label>
-                        <input type="range" id="lineWidth" min="1" max="10" value="2">
+                        <label for="lineWidth">Width <span id="lineWidthValue" class="value-badge">2px</span></label>
+                        <input type="range" id="lineWidth" min="1" max="10" value="2" aria-label="Line Width">
                     </div>
                     <div class="setting-item">
-                        <label>Color</label>
-                        <input type="color" id="lineColor" value="#cebbbb">
+                        <label for="lineColor">Color</label>
+                        <input type="color" id="lineColor" value="#cebbbb" aria-label="Line Color">
                     </div>
                     <div class="setting-item">
-                        <label>Type</label>
+                        <label for="lineType">Type</label>
                         <div class="dropdown-container custom-select" id="lineTypeContainer" data-id="lineType">
-                            <button class="select-trigger">
+                            <button class="select-trigger" id="lineType" aria-haspopup="listbox">
                                 <span class="selected-value">Straight</span>
                                 <span class="material-symbols-rounded">expand_more</span>
                             </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item active" data-value="straight">Straight</button>
-                                <button class="dropdown-item" data-value="curved">Curved</button>
-                                <button class="dropdown-item" data-value="angle">Angle</button>
+                            <div class="dropdown-menu" role="listbox">
+                                <button class="dropdown-item active" role="option"
+                                    data-value="straight">Straight</button>
+                                <button class="dropdown-item" role="option" data-value="curved">Curved</button>
+                                <button class="dropdown-item" role="option" data-value="angle">Angle</button>
                             </div>
                         </div>
                     </div>
                     <div class="setting-item">
-                        <label>Endpoints</label>
+                        <label for="lineEnd">Endpoints</label>
                         <div class="dropdown-container custom-select" id="lineEndContainer" data-id="lineEnd">
-                            <button class="select-trigger">
+                            <button class="select-trigger" id="lineEnd" aria-haspopup="listbox">
                                 <span class="selected-value">Ball</span>
                                 <span class="material-symbols-rounded">expand_more</span>
                             </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" data-value="none">None</button>
-                                <button class="dropdown-item" data-value="arrow">Arrow</button>
-                                <button class="dropdown-item active" data-value="ball">Ball</button>
-                                <button class="dropdown-item" data-value="square">Square</button>
+                            <div class="dropdown-menu" role="listbox">
+                                <button class="dropdown-item" role="option" data-value="none">None</button>
+                                <button class="dropdown-item" role="option" data-value="arrow">Arrow</button>
+                                <button class="dropdown-item active" role="option" data-value="ball">Ball</button>
+                                <button class="dropdown-item" role="option" data-value="square">Square</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
     </main>
 
-    <div id="mobileWarning" class="mobile-warning-overlay">
+    <section id="mobileWarning" class="mobile-warning-overlay" aria-labelledby="mobileWarningTitle" aria-modal="true"
+        role="dialog">
         <div class="mobile-warning-content">
             <div class="mobile-warning-icon">
                 <span class="material-symbols-rounded">devices</span>
             </div>
-            <h2>Expérience Desktop Recommandée</h2>
-            <p>InputMapper est conçu pour être utilisé sur un écran plus large (tablette ou PC) afin de garantir une
-                meilleure précision dans vos mappings.</p>
-            <button id="closeWarning" class="btn-primary mobile-warning-btn">Continuer quand même</button>
+            <h2 id="mobileWarningTitle">Desktop Experience Recommended</h2>
+            <p>InputMapper is designed to be used on a larger screen (tablet or PC) to ensure better precision in your
+                mappings.</p>
+            <button id="closeWarning" class="btn-primary mobile-warning-btn">Continue anyway</button>
         </div>
-    </div>
+    </section>
 
-    <div id="switchModal" class="modal-overlay">
+    <section id="switchModal" class="modal-overlay" aria-labelledby="switchModalTitle" aria-modal="true" role="dialog">
         <div class="modal-content">
             <div class="modal-icon warning">
                 <span class="material-symbols-rounded">warning</span>
             </div>
-            <h2>Clear all mappings?</h2>
+            <h2 id="switchModalTitle">Clear all mappings?</h2>
             <p>Changing the controller type will delete all your current labels. We recommend exporting to
-                <strong>JSON</strong> first so you can restore them later.</p>
+                <strong>JSON</strong> first so you can restore them later.
+            </p>
             <div class="modal-actions">
                 <button id="cancelSwitch" class="btn-secondary">Cancel</button>
                 <button id="confirmSwitch" class="btn-danger">Clear and Continue</button>
             </div>
         </div>
-    </div>
+    </section>
 
     <script type="module" src="assets/js/main.js"></script>
 </body>

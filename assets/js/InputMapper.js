@@ -8,6 +8,8 @@ export class InputMapper {
     constructor() {
         this.currentType = 'xbox';
         this.backgroundColor = '#192752';
+        this.secondaryColor = '#606A6E';
+        this.accentColor = '#ffffff';
         this.labels = [];
         this.isDragging = false;
         this.draggedItem = null;
@@ -49,9 +51,13 @@ export class InputMapper {
         const svg = this.svgWrapper.querySelector('svg');
         const paths = svg.querySelectorAll('path, ellipse, circle, rect');
         paths.forEach(path => {
-            const fill = path.getAttribute('fill');
-            if (fill && (fill.toLowerCase() === '#242424' || fill.toLowerCase() === '#232323')) {
+            const fill = (path.getAttribute('fill') || '').toLowerCase();
+            if (fill === '#242424' || fill === '#232323' || fill === '#192752') {
                 path.classList.add('js-body-part');
+            } else if (fill === '#606a6e' || fill === '#4a4a4a') {
+                path.classList.add('js-secondary-part');
+            } else if (fill === 'white' || fill === '#ffffff' || fill === '#f0f0f0') {
+                path.classList.add('js-accent-part');
             }
         });
 
@@ -63,14 +69,25 @@ export class InputMapper {
         const svg = this.svgWrapper.querySelector('svg');
         if (!svg) return;
 
-        const bodyParts = svg.querySelectorAll('.js-body-part');
-        bodyParts.forEach(part => {
+        // Update Body
+        svg.querySelectorAll('.js-body-part').forEach(part => {
             part.setAttribute('fill', this.backgroundColor);
         });
 
-        if (this.colorIndicator) {
-            this.colorIndicator.style.backgroundColor = this.backgroundColor;
-        }
+        // Update Secondary
+        svg.querySelectorAll('.js-secondary-part').forEach(part => {
+            part.setAttribute('fill', this.secondaryColor);
+        });
+
+        // Update Accent
+        svg.querySelectorAll('.js-accent-part').forEach(part => {
+            part.setAttribute('fill', this.accentColor);
+        });
+
+        // Update Indicators
+        if (this.colorIndicator) this.colorIndicator.style.backgroundColor = this.backgroundColor;
+        if (this.secondaryIndicator) this.secondaryIndicator.style.backgroundColor = this.secondaryColor;
+        if (this.accentIndicator) this.accentIndicator.style.backgroundColor = this.accentColor;
     }
 
     async loadKeySelector(type) {
@@ -432,8 +449,13 @@ export class InputMapper {
 
     async importMapping(data) {
         this.mappingTitle.value = data.title;
-        this.backgroundColor = data.color || '#242424';
+        this.backgroundColor = data.color || '#192752';
+        this.secondaryColor = data.secondaryColor || '#606A6E';
+        this.accentColor = data.accentColor || '#ffffff';
+
         this.colorPicker.value = this.backgroundColor;
+        this.secondaryColorPicker.value = this.secondaryColor;
+        this.accentColorPicker.value = this.accentColor;
 
         this.menuBtns.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.type === data.type);
