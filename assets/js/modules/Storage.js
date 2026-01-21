@@ -208,17 +208,31 @@ export class Storage {
                 }
             }
 
-            const input = l.element.querySelector('input');
+            const input = l.element.querySelector('textarea, input');
             if (input) {
                 const text = document.createElementNS(NS, 'text');
-                text.textContent = input.value;
                 text.setAttribute('x', iconImg ? "44" : "16");
-                text.setAttribute('y', (lRect.height / 2 + 5).toString());
                 text.setAttribute('fill', 'white');
                 text.setAttribute('font-family', 'Inter, sans-serif');
                 text.setAttribute('font-size', '14px');
                 text.setAttribute('font-weight', '500');
-                text.setAttribute('dominant-baseline', 'middle');
+
+                const val = input.value || '';
+                const lines = val.split('\n');
+                const lineHeight = 18; // Approx 1.4 * 14px
+
+                // Vertical centering adjustment for multiline
+                const totalTextHeight = (lines.length - 1) * lineHeight;
+                const startY = (lRect.height / 2) - (totalTextHeight / 2) + 4; // +4 for visual baseline tweak
+
+                lines.forEach((line, index) => {
+                    const tspan = document.createElementNS(NS, 'tspan');
+                    tspan.textContent = line || ' ';
+                    tspan.setAttribute('x', iconImg ? "44" : "16");
+                    tspan.setAttribute('y', (startY + (index * lineHeight)).toString());
+                    text.appendChild(tspan);
+                });
+
                 gLabel.appendChild(text);
             }
             gLabels.appendChild(gLabel);
