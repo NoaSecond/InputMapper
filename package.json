@@ -4,14 +4,12 @@
     "description": "Controller Visualization and Input Mapping Tool",
     "main": "index.html",
     "scripts": {
-        "start": "serve .",
-        "deploy": "vercel --prod"
+        "start": "serve ."
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "serve": "^14.2.4",
-        "vercel": "^39.2.2"
+        "serve": "^14.2.4"
     }
 }

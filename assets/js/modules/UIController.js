@@ -68,7 +68,7 @@ export class UIController {
 
         // Color Pickers
         app.colorPicker.addEventListener('input', (e) => {
-            app.backgroundColor = e.target.value;
+            app.mainColor = e.target.value;
             app.updateControllerColor();
         });
 

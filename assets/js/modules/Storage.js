@@ -3,7 +3,7 @@ export class Storage {
         const data = {
             title: app.mappingTitle.value || 'Untitled',
             type: app.currentType,
-            color: app.backgroundColor,
+            color: app.mainColor,
             secondaryColor: app.secondaryColor,
             accentColor: app.accentColor,
             labels: app.labels.map(l => ({
@@ -57,7 +57,7 @@ export class Storage {
             const bg = document.createElementNS(NS, 'rect');
             bg.setAttribute('width', '100%');
             bg.setAttribute('height', '100%');
-            bg.setAttribute('fill', app.backgroundColor || '#0f172a');
+            bg.setAttribute('fill', app.mainColor || '#0f172a');
             svg.appendChild(bg);
         }
 
