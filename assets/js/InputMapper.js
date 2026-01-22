@@ -7,7 +7,7 @@ import { DEFAULT_POSITIONS } from './modules/Config.js';
 export class InputMapper {
     constructor() {
         this.currentType = 'xbox';
-        this.backgroundColor = '#192752';
+        this.mainColor = Utils.hslToHex(Math.random() * 360, 70, 70);
         this.secondaryColor = '#606A6E';
         this.accentColor = '#ffffff';
         this.labels = [];
@@ -38,6 +38,7 @@ export class InputMapper {
 
     async init() {
         UIController.init(this);
+        if (this.colorPicker) this.colorPicker.value = this.mainColor;
         await this.loadController(this.currentType);
     }
 
@@ -71,7 +72,7 @@ export class InputMapper {
 
         // Update Body
         svg.querySelectorAll('.js-body-part').forEach(part => {
-            part.setAttribute('fill', this.backgroundColor);
+            part.setAttribute('fill', this.mainColor);
         });
 
         // Update Secondary
@@ -85,9 +86,17 @@ export class InputMapper {
         });
 
         // Update Indicators
-        if (this.colorIndicator) this.colorIndicator.style.backgroundColor = this.backgroundColor;
+        if (this.colorIndicator) this.colorIndicator.style.backgroundColor = this.mainColor;
         if (this.secondaryIndicator) this.secondaryIndicator.style.backgroundColor = this.secondaryColor;
         if (this.accentIndicator) this.accentIndicator.style.backgroundColor = this.accentColor;
+
+        this.updateAdaptiveBackground();
+    }
+
+    updateAdaptiveBackground() {
+        const { bg, grid } = Utils.getAdaptiveBackground(this.mainColor);
+        document.documentElement.style.setProperty('--workspace-bg', bg);
+        document.documentElement.style.setProperty('--grid-color', grid);
     }
 
     async loadKeySelector(type) {
@@ -449,16 +458,22 @@ export class InputMapper {
 
     async importMapping(data) {
         this.mappingTitle.value = data.title;
-        this.backgroundColor = data.color || '#192752';
+        this.mainColor = data.color || '#192752';
         this.secondaryColor = data.secondaryColor || '#606A6E';
         this.accentColor = data.accentColor || '#ffffff';
 
-        this.colorPicker.value = this.backgroundColor;
+        this.colorPicker.value = this.mainColor;
         this.secondaryColorPicker.value = this.secondaryColor;
         this.accentColorPicker.value = this.accentColor;
+        this.updateAdaptiveBackground();
 
-        this.menuBtns.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.type === data.type);
+        const allControllerItems = [...this.menuBtns, ...(this.controllerDropdownItems || [])];
+        allControllerItems.forEach(item => {
+            const isActive = item.dataset.type === data.type;
+            item.classList.toggle('active', isActive);
+            if (isActive && this.currentControllerName) {
+                this.currentControllerName.textContent = item.textContent;
+            }
         });
 
         await this.loadController(data.type);

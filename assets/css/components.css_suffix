@@ -1,0 +1,34 @@
+@media (max-width: 1200px) {
+    .bmc-button-floating span {
+        display: none;
+    }
+
+    .bmc-button-floating {
+        padding: 12px;
+        left: 20px;
+        bottom: 100px;
+    }
+}
+
+@media (max-width: 950px) {
+    .floating-menu {
+        display: none;
+    }
+
+    .controller-dropdown {
+        display: block;
+    }
+}
+
+@media (max-width: 900px) {
+    .bmc-button-floating {
+        display: none;
+        /* Hide on mobile to avoid cluttering */
+    }
+}
+
+@media (max-width: 500px) {
+    .mobile-warning-overlay {
+        display: flex;
+    }
+}

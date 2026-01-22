@@ -99,3 +99,9 @@ export const DEFAULT_POSITIONS = {
         'ScrollDown': { targetX: 0.50, targetY: 0.38 }
     }
 };
+
+export const ADAPTIVE_BG_SETTINGS = {
+    darkL: 8,
+    lightL: 15,
+    threshold: 40 // Lightness threshold for main color
+};

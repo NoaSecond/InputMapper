@@ -1,5 +1,6 @@
 :root {
-    --bg-color: #0d0e12;
+    --workspace-bg: #0d0e12;
+    --grid-color: rgba(255, 255, 255, 0.05);
     --panel-bg: rgba(22, 24, 30, 0.8);
     --border-color: rgba(255, 255, 255, 0.1);
     --text-primary: #ffffff;
@@ -38,7 +39,8 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--bg-color);
+    background-color: var(--workspace-bg);
+    transition: background-color 0.3s ease;
     color: var(--text-primary);
     height: 100vh;
     display: flex;
