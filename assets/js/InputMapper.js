@@ -7,7 +7,7 @@ import { DEFAULT_POSITIONS } from './modules/Config.js';
 export class InputMapper {
     constructor() {
         this.currentType = 'xbox';
-        this.backgroundColor = '#192752';
+        this.backgroundColor = Utils.hslToHex(Math.random() * 360, 70, 70);
         this.secondaryColor = '#606A6E';
         this.accentColor = '#ffffff';
         this.labels = [];
@@ -38,6 +38,7 @@ export class InputMapper {
 
     async init() {
         UIController.init(this);
+        if (this.colorPicker) this.colorPicker.value = this.backgroundColor;
         await this.loadController(this.currentType);
     }
 
