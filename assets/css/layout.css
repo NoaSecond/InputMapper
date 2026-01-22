@@ -146,25 +146,6 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    display: block;
-    /* Overridden by grid in user's latest edit or manual change? 
-                       Actually, the user reverted the 'display: block' in step 32. 
-                       Let's check the current style.css lines 145-146. */
-    overflow: hidden;
-}
-
-/* Wait, I should double check lines 145-146 in style.css */
-/* Lines 145-146 in style.css from step 129:
-   145:     display: grid;
-   146:     grid-template-columns: 1fr 300px;
-*/
-
-main {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     display: grid;
     grid-template-columns: 1fr 300px;
     overflow: hidden;

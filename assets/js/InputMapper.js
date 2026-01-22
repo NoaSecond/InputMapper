@@ -467,8 +467,13 @@ export class InputMapper {
         this.accentColorPicker.value = this.accentColor;
         this.updateAdaptiveBackground();
 
-        this.menuBtns.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.type === data.type);
+        const allControllerItems = [...this.menuBtns, ...(this.controllerDropdownItems || [])];
+        allControllerItems.forEach(item => {
+            const isActive = item.dataset.type === data.type;
+            item.classList.toggle('active', isActive);
+            if (isActive && this.currentControllerName) {
+                this.currentControllerName.textContent = item.textContent;
+            }
         });
 
         await this.loadController(data.type);

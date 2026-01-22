@@ -18,6 +18,9 @@ export class UIController {
         app.keySelector = document.getElementById('keySelector');
         app.mappingTitle = document.getElementById('mappingTitle');
         app.menuBtns = document.querySelectorAll('.menu-btn');
+        app.controllerDropdownItems = document.querySelectorAll('.controller-dropdown .dropdown-item');
+        app.controllerDropdownTrigger = document.getElementById('controllerMenuBtn');
+        app.currentControllerName = document.getElementById('currentControllerName');
         app.exportDropdown = document.querySelector('.export-dropdown');
         app.exportMenuBtn = document.getElementById('exportMenuBtn');
         app.lineWidthValue = document.getElementById('lineWidthValue');
@@ -30,41 +33,56 @@ export class UIController {
         const confirmBtn = document.getElementById('confirmSwitch');
         const cancelBtn = document.getElementById('cancelSwitch');
 
-        app.menuBtns.forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const newType = btn.dataset.type;
-                if (newType === app.currentType) return;
+        // Helper for switching controller
+        const switchController = async (newType, element) => {
+            if (newType === app.currentType) return;
 
-                if (app.labels.length > 0) {
-                    switchModal.classList.add('active');
+            if (app.labels.length > 0) {
+                switchModal.classList.add('active');
+                const userAction = await new Promise(resolve => {
+                    const onConfirm = () => { cleanup(); resolve(true); };
+                    const onCancel = () => { cleanup(); resolve(false); };
+                    const cleanup = () => {
+                        confirmBtn.removeEventListener('click', onConfirm);
+                        cancelBtn.removeEventListener('click', onCancel);
+                        switchModal.classList.remove('active');
+                    };
+                    confirmBtn.addEventListener('click', onConfirm);
+                    cancelBtn.addEventListener('click', onCancel);
+                });
 
-                    const userAction = await new Promise(resolve => {
-                        const onConfirm = () => {
-                            cleanup();
-                            resolve(true);
-                        };
-                        const onCancel = () => {
-                            cleanup();
-                            resolve(false);
-                        };
-                        const cleanup = () => {
-                            confirmBtn.removeEventListener('click', onConfirm);
-                            cancelBtn.removeEventListener('click', onCancel);
-                            switchModal.classList.remove('active');
-                        };
-                        confirmBtn.addEventListener('click', onConfirm);
-                        cancelBtn.addEventListener('click', onCancel);
-                    });
+                if (!userAction) return;
+                app.clearLabels();
+            }
 
-                    if (!userAction) return;
-                    app.clearLabels();
-                }
-
-                app.menuBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                await app.loadController(newType);
+            // Update all UI elements (both menu buttons and dropdown items)
+            [...app.menuBtns, ...app.controllerDropdownItems].forEach(el => {
+                el.classList.toggle('active', el.dataset.type === newType);
             });
+
+            // Update dropdown trigger text
+            if (app.currentControllerName) {
+                app.currentControllerName.textContent = element.textContent;
+            }
+
+            await app.loadController(newType);
+        };
+
+        app.menuBtns.forEach(btn => {
+            btn.addEventListener('click', () => switchController(btn.dataset.type, btn));
         });
+
+        app.controllerDropdownItems.forEach(item => {
+            item.addEventListener('click', () => switchController(item.dataset.type, item));
+        });
+
+        // Toggle Controller Dropdown
+        if (app.controllerDropdownTrigger) {
+            app.controllerDropdownTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                app.controllerDropdownTrigger.parentElement.classList.toggle('open');
+            });
+        }
 
         // Color Pickers
         app.colorPicker.addEventListener('input', (e) => {
