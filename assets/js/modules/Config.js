@@ -96,7 +96,10 @@ export const DEFAULT_POSITIONS = {
         'RightClick': { targetX: 0.76, targetY: 0.20 },
         'MiddleClick': { targetX: 0.50, targetY: 0.25 },
         'ScrollUp': { targetX: 0.50, targetY: 0.12 },
-        'ScrollDown': { targetX: 0.50, targetY: 0.38 }
+        'ScrollDown': { targetX: 0.50, targetY: 0.38 },
+        'Move': { targetX: 0.50, targetY: 0.50 },
+        'MoveHorizontally': { targetX: 0.50, targetY: 0.45 },
+        'MoveVertically': { targetX: 0.50, targetY: 0.55 }
     }
 };
 
