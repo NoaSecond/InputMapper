@@ -129,7 +129,7 @@ export class InputMapper {
         } else if (type === 'keyboard') {
             return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'Shift', 'Alt', 'Space', 'Tab', 'Caps', 'Esc', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
         } else if (type === 'mouse') {
-            return ['LeftClick', 'MiddleClick', 'RightClick', 'ScrollUp', 'ScrollDown'];
+            return ['LeftClick', 'MiddleClick', 'RightClick', 'ScrollUp', 'ScrollDown', 'Move', 'MoveHorizontally', 'MoveVertically'];
         }
         return [];
     }
